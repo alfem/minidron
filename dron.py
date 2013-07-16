@@ -1,17 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-# dron
+# Minidron Web Control 
 
 # Author: Alfonso E.M.
 # License: Free (GPL) 
-# Version: 1.0 - 29/Jun/2010
+# Version: 2.0 - 16/Jun/2013
 
 import pygame
 from pygame.locals import *
 import random
 import time
 import sys
+import signal
+import threading
+
+import BaseHTTPServer
+import SocketServer
 
 from face.face import *
 from voice.voice import *
@@ -19,12 +24,11 @@ from arduino.servo import *
 from sensors.wifi import *
 from sensors.battery import *
 
-import curses
-
 
 arduino=Arduino("/dev/ttyUSB0")
 wifi="wlan0"
 battery="BAT0"
+
 
 # Typical netbook resolution
 resolution=1024,600
@@ -35,6 +39,35 @@ screen=pygame.display.set_mode(resolution)
 
 face=Face(resolution)
 
+
+class HTTPServer(SocketServer.ThreadingMixIn,
+                 BaseHTTPServer.HTTPServer):
+  def __init__(self, server_address):
+    SocketServer.TCPServer.__init__(self, server_address, HTTPHandler)
+
+class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+  """
+HTTP Request Handler
+"""
+  def load_index(self,filename):
+     f=open(filename)
+     content=f.read()
+     f.close()
+     return content
+
+  def do_GET(self):
+    if self.path == "/":
+      if not hasattr(self,"index"):
+         self.index=self.load_index("remote.html") 
+      response = self.index
+    else:
+      response="OK"
+ 
+    self.send_response(200)
+    self.send_header("Content-Length", str(len(response)))
+    self.send_header("Cache-Control", "no-store")
+    self.end_headers()
+    self.wfile.write(response) 
 
 
 def sayandmove(text2say):
@@ -57,34 +90,32 @@ def prompttext():
         sayandmove(text2say)
         return text2say
 
+
+def quit(signum, frame):
+    print "Bye!"
+    sys.exit(0)
         
 # BUCLE PRINCIPAL
 
-textscreen = curses.initscr()
-textscreen.addstr(" BATTERY:                        WIFI:")
-textscreen.addstr( 2,0," MOVE:      <-ARROWS->           STOP:  SPACEBAR")
+signal.signal(signal.SIGINT, quit)
+signal.signal(signal.SIGTERM, quit)
 
-textscreen.addstr( 4,0,"             \   /                /   \     _   _")     
-textscreen.addstr( 5,0," FACES       O   O      O   O     O   O     O   O")
-textscreen.addstr( 6,0,"             _____        o        ___      _____")
-textscreen.addstr( 7,0,"              [a]        [s]       [d]       [f]")
-
-textscreen.addstr( 9,0," BLINK      O   -      -   -     -   O")
-textscreen.addstr(10,0,"            _____      _____     _____")
-textscreen.addstr(11,0,"             [q]        [e]       [r] ")
-
-textscreen.addstr(13,0," LOOK      <O   O      O   O     O   O>")
-textscreen.addstr(14,0,"             [z]        [x]       [c] ")
-
-textscreen.addstr(16,0," SAY [RETURN]:")
-textscreen.addstr(17,0," REPEAT [BACKSPACE]:")
+http_server = HTTPServer(server_address=("",8080),)
+http_server_thread = threading.Thread(target=http_server.serve_forever())
+http_server_thread.setDaemon(true)
+http_server_thread.start()
+  
 
 last_text=""
 last_blink=time.clock()
 last_sensors=time.clock()
 battery_capacity=get_battery_capacity(battery)
 
+
 while 1:
+
+  http_server_thread.join(60)
+
 
 #Refresh wifi and battery indicators
   if time.clock()-last_sensors > 5:
@@ -97,7 +128,7 @@ while 1:
        indicator="||||||||||"[0:x]+".........."[0:10-x]   
      else:
        indicator="OFF"
-     textscreen.addstr(0,9,indicator)
+#     textscreen.addstr(0,9,indicator)
 
      x=get_wifi_level()
      if x > 0:
@@ -105,7 +136,7 @@ while 1:
        indicator="||||||||||"[0:x]+".........."[0:10-x]   
      else:
        indicator="OFF"
-     textscreen.addstr(0,38,indicator)
+#     textscreen.addstr(0,38,indicator)
 
      last_sensors=time.clock()
 
@@ -117,12 +148,7 @@ while 1:
 
   
 # Control por teclas
-  textscreen.nodelay(1)
-  textscreen.keypad(1)
-#  curses.noecho()
-#  curses.cbreak()
-  textscreen.move(19,0)
-  key = textscreen.getch()
+  key = ""
 
   if key != -1:
     if key == K_ESCAPE:

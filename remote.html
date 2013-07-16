@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>MINIDRON</title>
+    <meta charset="utf-8">
+    <meta name="description" content="Minidron Web Control">
+    <meta name="author" content="Alfonso E.M.">
+  </head>
+
+<script type="text/javascript">  
+ function Action(actionname, resultdiv){  
+   fullURL="http://localhost:8080/"+actionname;
+   self.xmlHttpReq = new XMLHttpRequest();
+   self.xmlHttpReq.open('GET', fullURL, true);   
+   self.xmlHttpReq.send();
+   result = document.getElementById(resultdiv);  
+   result.innerHTML = actionname;
+ }  
+
+document.onkeydown = function(e) {
+  if (e.keyCode == 38) { Action("forward","result"); }
+  else if (e.keyCode == 40) { Action("backward","result"); }
+  else if (e.keyCode == 37) { Action("left","result"); }
+  else if (e.keyCode == 39) { Action("right","result"); }
+  else if (e.keyCode == 32) { Action("stop","result"); }
+  else if (e.keyCode == 15) { Action("say","result"); }
+}
+</script>  
+
+
+<style>
+body {
+ padding: 0px;
+ margin: 0px;
+ font-size: 20px;
+ font-family: Sans;
+ }
+
+.container { 
+ width: 360px;
+ background: lightblue;
+}
+
+.status {
+ font-size: 50%;
+ text-align:center;
+}
+
+.indicators {
+ font-size: 100%;
+ text-align:left;
+}
+
+.wifi {
+ background:orange;
+ text-align:left;
+}
+
+.battery {
+ background:green;
+ text-align:right;
+}
+
+.video {
+ text-align:center;
+}
+
+
+.btn-wide {
+ font-size: 25px;
+ font-family: Sans;
+ width: 100%;
+ height: 60px;
+ text-align: center;
+}
+
+
+footer {
+ font-size: 9px;
+}
+
+</style>
+
+  <body>
+
+  <div class=container>
+
+  <div class=indicators>
+    <span class="wifi" id="wifi">___</span>
+    <span class="battery" id="battery">___</span>
+  </div>
+
+  <div class=status>
+    <span id="result">ok</span>
+
+  </div>
+
+  <div class=video>
+  <img src="http://dron:8080/?action=stream" alt="video feed" />
+  </div>
+
+  <div class=keypad>
+
+  <table width=100% border=0>
+  <tr><td> </td><td>  <input id="btn_forward" onclick="Action('forward','result');"  class=btn-wide value='FORWARD' type=submit></td><td></td></tr>
+  <tr><td><input id="btn_left" onclick="Action('left','result');"  class=btn-wide value='LEFT' type=submit></td><td> <input id="btn_stop" onclick="Action('stop','result');"  class=btn-wide value='STOP' type=submit> </td><td><input id="btn_right" onclick="Action('right','result');"  class=btn-wide value='RIGHT' type=submit></td></tr>
+  <tr><td> </td><td>  <input id="btn_backward" onclick="Action('backward','result');"  class=btn-wide value='BACKWARD' type=submit></td><td></td></tr>
+  <tr><td colspan=2><input type=text size=25></td><td><input id="btn_say" onclick="Action('say','result');"  class=btn-wide value='SAY' type=submit></td></tr>
+  </table>
+  </div>
+ 
+</div>
+
+   
+<footer>
+ <p>&copy; Alfonso E.M. 2013</p>
+</footer>
+
+</body>
+</html>
+
