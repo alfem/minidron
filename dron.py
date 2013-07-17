@@ -14,6 +14,7 @@ import time
 import sys
 import signal
 import threading
+from Queue import Queue
 
 import BaseHTTPServer
 import SocketServer
@@ -24,7 +25,7 @@ from arduino.servo import *
 from sensors.wifi import *
 from sensors.battery import *
 
-
+PORT=8080
 arduino=Arduino("/dev/ttyUSB0")
 wifi="wlan0"
 battery="BAT0"
@@ -39,11 +40,23 @@ screen=pygame.display.set_mode(resolution)
 
 face=Face(resolution)
 
+q=Queue(100)
 
-class HTTPServer(SocketServer.ThreadingMixIn,
-                 BaseHTTPServer.HTTPServer):
-  def __init__(self, server_address):
-    SocketServer.TCPServer.__init__(self, server_address, HTTPHandler)
+class dronHTTPServer():
+  def __init__(self, ip, port):
+        self.server = HTTPServer((ip,port), HTTPHandler)
+
+  def start(self):
+        self.thread = threading.Thread(target=self.server.serve_forever)
+        self.thread.daemon = True
+        self.thread.start()
+
+class HTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+  """
+HTTP MultiThread Server
+"""
+  pass
+
 
 class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   """
@@ -56,11 +69,13 @@ HTTP Request Handler
      return content
 
   def do_GET(self):
+    print self.path
     if self.path == "/":
       if not hasattr(self,"index"):
          self.index=self.load_index("remote.html") 
       response = self.index
     else:
+      q.put(self.path)
       response="OK"
  
     self.send_response(200)
@@ -97,106 +112,97 @@ def quit(signum, frame):
         
 # BUCLE PRINCIPAL
 
-signal.signal(signal.SIGINT, quit)
-signal.signal(signal.SIGTERM, quit)
+if __name__ == '__main__':
 
-http_server = HTTPServer(server_address=("",8080),)
-http_server_thread = threading.Thread(target=http_server.serve_forever())
-http_server_thread.setDaemon(true)
-http_server_thread.start()
-  
+    signal.signal(signal.SIGINT, quit)
+    signal.signal(signal.SIGTERM, quit)
 
-last_text=""
-last_blink=time.clock()
-last_sensors=time.clock()
-battery_capacity=get_battery_capacity(battery)
+    print "Starting web server at port", PORT, "...",
+    http_server = dronHTTPServer("127.0.0.1",PORT)
+    http_server.start()
 
+    print "OK."
 
-while 1:
+    last_text=""
+    last_blink=time.clock()
+    last_sensors=time.clock()
+    battery_capacity=get_battery_capacity(battery)
 
-  http_server_thread.join(60)
+    while True:
 
+    #Refresh wifi and battery indicators
+      if time.clock()-last_sensors > 5:
 
-#Refresh wifi and battery indicators
-  if time.clock()-last_sensors > 5:
+         x=get_battery_level()
+         x=x*100/battery_capacity 
 
-     x=get_battery_level()
-     x=x*100/battery_capacity 
+         if x > 0:
+           x=int(x/10)
+           indicator="||||||||||"[0:x]+".........."[0:10-x]   
+         else:
+           indicator="OFF"
+    #     textscreen.addstr(0,9,indicator)
 
-     if x > 0:
-       x=int(x/10)
-       indicator="||||||||||"[0:x]+".........."[0:10-x]   
-     else:
-       indicator="OFF"
-#     textscreen.addstr(0,9,indicator)
+         x=get_wifi_level()
+         if x > 0:
+           x=int(x/10)
+           indicator="||||||||||"[0:x]+".........."[0:10-x]   
+         else:
+           indicator="OFF"
+    #     textscreen.addstr(0,38,indicator)
 
-     x=get_wifi_level()
-     if x > 0:
-       x=int(x/10)
-       indicator="||||||||||"[0:x]+".........."[0:10-x]   
-     else:
-       indicator="OFF"
-#     textscreen.addstr(0,38,indicator)
+         last_sensors=time.clock()
 
-     last_sensors=time.clock()
+    #Blink randomly
+      if time.clock()-last_blink > 2:
+        if random.randint(0,100000) == 1:
+          face.blink_both()
+          last_blink=time.clock()
 
-#Blink randomly
-  if time.clock()-last_blink > 2:
-    if random.randint(0,100000) == 1:
-      face.blink_both()
-      last_blink=time.clock()
+      while not q.empty():
+        item=q.get()
+        action=item[1:]
+      
+# Actions received from web interface
 
-  
-# Control por teclas
-  key = ""
+        if action == "quit":
+            pygame.quit()	
+            sys.exit(0)
+# Movement    
+        elif action == "stop":
+            arduino.stopall()    
+        elif action == "forward":
+            arduino.forward()
+        elif action == "backward":
+            arduino.backward()
+        elif action == "left":
+            arduino.left()
+        elif action == "right":
+            arduino.right()
+        elif (action == "say"):
+            last_text=prompttext()
+            sayandmove(last_text)
+# Face Expressions            
+        if (action == K_z):
+            face.look_left()
+        if (action == K_c):
+            face.look_right()
+        if (action == K_q):
+            face.blink_left()
+        if (action == K_e):
+            face.blink_right()
+        if (action == K_w):
+            face.blink_both()
 
-  if key != -1:
-    if key == K_ESCAPE:
-        curses.endwin()
-        pygame.quit()	
-        sys.exit(0)
-    if key == ord(" "):
-        textscreen.addstr("Brakes !!")
-        arduino.stopall()    
-    if key == curses.KEY_UP:
-        textscreen.addstr("Forward >>")
-        arduino.forward()
-    if key == curses.KEY_DOWN:
-        textscreen.addstr("Backward <<")
-        arduino.backward()
-    if key == curses.KEY_LEFT:
-        textscreen.addstr("Left")
-        arduino.left()
-    if key == curses.KEY_RIGHT:
-        textscreen.addstr("Right")
-        arduino.right()
-    if (key == 10):
-        last_text=prompttext()
-    if (key == curses.KEY_BACKSPACE and last_text != ""):
-        textscreen.addstr(17,20,last_text)
-        textscreen.refresh()
-        sayandmove(last_text)
-        
-    if (key == K_z):
-        face.look_left()
-    if (key == K_c):
-        face.look_right()
-    if (key == K_q):
-        face.blink_left()
-    if (key == K_e):
-        face.blink_right()
-    if (key == K_w):
-        face.blink_both()
+        if (action == K_f):
+           face.mouth.draw(screen,"base")
+        if (action == K_s):
+           face.surprise()
+        if (action == "sad"):
+           face.sad()
+        if (action == "angry"):
+           face.angry()
+        if (action == "smile"):
+           face.mouth.draw(screen,"smile")
 
-    if (key == K_f):
-       face.mouth.draw(screen,"base")
-    if (key == K_s):
-       face.surprise()
-    if (key == K_d):
-       face.sad()
-    if (key == K_a):
-       face.angry()
-    if (key == K_g):
-       face.mouth.draw(screen,"smile")
-
-     
+         
