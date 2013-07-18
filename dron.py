@@ -26,7 +26,7 @@ from arduino.servo import *
 from sensors.wifi import *
 from sensors.battery import *
 
-PORT=8080
+PORT=80
 arduino=Arduino("/dev/ttyUSB0")
 wifi="wlan0"
 battery="BAT0"
