@@ -167,7 +167,7 @@ if __name__ == '__main__':
       
 # Actions received from web interface
 
-        if action == "quit":
+        if params == "quit":
             pygame.quit()	
             sys.exit(0)
 # Movement    
