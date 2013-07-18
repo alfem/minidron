@@ -119,7 +119,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, quit)
 
     print "Starting web server at port", PORT, "...",
-    http_server = dronHTTPServer("127.0.0.1",PORT)
+    http_server = dronHTTPServer("",PORT)
     http_server.start()
 
     print "OK."
