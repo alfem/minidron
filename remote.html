@@ -8,22 +8,27 @@
   </head>
 
 <script type="text/javascript">  
- function Action(actionname, resultdiv){  
-   fullURL="http://localhost:8080/"+actionname;
-   self.xmlHttpReq = new XMLHttpRequest();
-   self.xmlHttpReq.open('GET', fullURL, true);   
-   self.xmlHttpReq.send();
-   result = document.getElementById(resultdiv);  
+ function onload(){
+   result = document.getElementById("result");  
+   text_say = document.getElementById("text_say");  
+ }
+
+ function Action(actionname, params){  
+   fullURL="http://localhost:8080/"+actionname+"?"+params;
+   xmlHttpReq = new XMLHttpRequest();
+   xmlHttpReq.open('GET', fullURL, true);   
+   xmlHttpReq.send();
    result.innerHTML = actionname;
  }  
 
 document.onkeydown = function(e) {
-  if (e.keyCode == 38) { Action("forward","result"); }
-  else if (e.keyCode == 40) { Action("backward","result"); }
-  else if (e.keyCode == 37) { Action("left","result"); }
-  else if (e.keyCode == 39) { Action("right","result"); }
-  else if (e.keyCode == 32) { Action("stop","result"); }
-  else if (e.keyCode == 15) { Action("say","result"); }
+  if (e.keyCode == 38) { Action("forward"); }
+  else if (e.keyCode == 40) { Action("backward"); }
+  else if (e.keyCode == 37) { Action("left"); }
+  else if (e.keyCode == 39) { Action("right"); }
+  else if (e.keyCode == 32) { Action("stop"); }
+  else if (e.keyCode == 13) { Action("say",text_say.value); }
+//  else { alert(e.keyCode)}
 }
 </script>  
 
@@ -81,7 +86,7 @@ footer {
 
 </style>
 
-  <body>
+  <body onload="onload();">
 
   <div class=container>
 
@@ -102,14 +107,14 @@ footer {
   <div class=keypad>
 
   <table width=100% border=0>
-  <tr><td> </td><td>  <input id="btn_forward" onclick="Action('forward','result');"  class=btn-wide value='FORWARD' type=submit></td><td></td></tr>
-  <tr><td><input id="btn_left" onclick="Action('left','result');"  class=btn-wide value='LEFT' type=submit></td><td> <input id="btn_stop" onclick="Action('stop','result');"  class=btn-wide value='STOP' type=submit> </td><td><input id="btn_right" onclick="Action('right','result');"  class=btn-wide value='RIGHT' type=submit></td></tr>
-  <tr><td> </td><td>  <input id="btn_backward" onclick="Action('backward','result');"  class=btn-wide value='BACKWARD' type=submit></td><td></td></tr>
-  <tr><td colspan=2><input type=text size=25></td><td><input id="btn_say" onclick="Action('say','result');"  class=btn-wide value='SAY' type=submit></td></tr>
+  <tr><td> </td><td>  <input id="btn_forward" onclick="Action('forward');"  class=btn-wide value='FORWARD' type=submit></td><td></td></tr>
+  <tr><td><input id="btn_left" onclick="Action('left');"  class=btn-wide value='LEFT' type=submit></td><td> <input id="btn_stop" onclick="Action('stop');"  class=btn-wide value='STOP' type=submit> </td><td><input id="btn_right" onclick="Action('right');"  class=btn-wide value='RIGHT' type=submit></td></tr>
+  <tr><td> </td><td>  <input id="btn_backward" onclick="Action('backward');"  class=btn-wide value='BACKWARD' type=submit></td><td></td></tr>
+  <tr><td colspan=2><input id="text_say" type=text size=25></td><td><input id="btn_say" onclick="Action('say',text_say.value);"  class=btn-wide value='SAY' type=submit></td></tr>
   </table>
 
   <table width=100% border=0>
-  <tr><td><input id="btn_smile" onclick="Action('smile','result');"  class=btn-wide value=':-)' type=submit></td><td><input id="btn_sad" onclick="Action('sad','result');"  class=btn-wide value=':-(' type=submit></td><td><input id="btn_angry" onclick="Action('angry','result');"  class=btn-wide value='}:-|' type=submit></td></tr>
+  <tr><td><input id="btn_smile" onclick="Action('smile');"  class=btn-wide value=':-)' type=submit></td><td><input id="btn_sad" onclick="Action('sad');"  class=btn-wide value=':-(' type=submit></td><td><input id="btn_angry" onclick="Action('angry');"  class=btn-wide value='}:-|' type=submit></td></tr>
 
   </table>
   </div>

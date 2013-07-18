@@ -18,6 +18,7 @@ from Queue import Queue
 
 import BaseHTTPServer
 import SocketServer
+from urlparse import urlparse
 
 from face.face import *
 from voice.voice import *
@@ -160,8 +161,9 @@ if __name__ == '__main__':
           last_blink=time.clock()
 
       while not q.empty():
-        item=q.get()
-        action=item[1:]
+        items=urlparse(q.get())
+        action=items.path[1:]
+        params=items.query
       
 # Actions received from web interface
 
@@ -180,8 +182,7 @@ if __name__ == '__main__':
         elif action == "right":
             arduino.right()
         elif (action == "say"):
-            last_text=prompttext()
-            sayandmove(last_text)
+            sayandmove(params)
 # Face Expressions            
         if (action == K_z):
             face.look_left()
