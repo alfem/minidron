@@ -11,14 +11,20 @@
  function onload(){
    result = document.getElementById("result");  
    text_say = document.getElementById("text_say");  
+   battery_meter = document.getElementById("battery_meter");  
+   wifi_meter = document.getElementById("wifi_meter");  
  }
 
  function Action(actionname, params){  
    fullURL="http://dron:80/"+actionname+"?"+params;
-   xmlHttpReq = new XMLHttpRequest();
-   xmlHttpReq.open('GET', fullURL, true);   
-   xmlHttpReq.send();
-   result.innerHTML = actionname;
+   request = new XMLHttpRequest();
+   request.open('GET', fullURL, false);   
+   request.send();
+   response=request.responseText; 
+   items=response.split(";")
+   result.innerHTML = actionname+": "+items[0];
+   battery_meter.innerHTML = items[1];
+   wifi_meter.innerHTML = items[2];
  }  
 
 document.onkeydown = function(e) {
@@ -56,12 +62,12 @@ body {
  text-align:left;
 }
 
-.wifi {
+.wifi_meter {
  background:orange;
  text-align:left;
 }
 
-.battery {
+.battery_meter {
  background:green;
  text-align:right;
 }
@@ -91,8 +97,8 @@ footer {
   <div class=container>
 
   <div class=indicators>
-    <span class="wifi" id="wifi">___</span>
-    <span class="battery" id="battery">___</span>
+    <span class="wifi" id="battery_meter">___</span>
+    <span class="battery" id="wifi_meter">___</span>
   </div>
 
   <div class=status>

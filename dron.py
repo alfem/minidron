@@ -26,14 +26,16 @@ from arduino.servo import *
 from sensors.wifi import *
 from sensors.battery import *
 
+
+# --- Some configurable parameters
+
 PORT=80
 arduino=Arduino("/dev/ttyUSB0")
 wifi="wlan0"
 battery="BAT0"
+resolution=1024,600 # Typical netbook resolution
 
-
-# Typical netbook resolution
-resolution=1024,600
+# --- End of configurable stuff
 
 pygame.display.init()
 pygame.mouse.set_visible(0)
@@ -41,7 +43,10 @@ screen=pygame.display.set_mode(resolution)
 
 face=Face(resolution)
 
-q=Queue(100)
+battery_level=0
+wifi_level=0
+q=Queue(100) # simple communication method between http server and main program
+
 
 class dronHTTPServer():
   def __init__(self, ip, port):
@@ -57,7 +62,6 @@ class HTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 HTTP MultiThread Server
 """
   pass
-
 
 class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   """
@@ -77,7 +81,7 @@ HTTP Request Handler
       response = self.index
     else:
       q.put(self.path)
-      response="OK"
+      response="OK;%i;%i;" % (battery_level, wifi_level)
  
     self.send_response(200)
     self.send_header("Content-Length", str(len(response)))
@@ -95,23 +99,12 @@ def sayandmove(text2say):
         face.mouth.draw(screen,"base")
 
 
-def prompttext():
-        textscreen.addstr(16,0," SAY [RETURN]:",curses.A_REVERSE)
-        textscreen.nodelay(0)
-        text2say=textscreen.getstr(16,14)
-        textscreen.nodelay(1)
-        textscreen.addstr(16,0," SAY [RETURN]:")
-        textscreen.addstr(17,20,text2say)
-        textscreen.refresh()
-        sayandmove(text2say)
-        return text2say
-
-
 def quit(signum, frame):
     print "Bye!"
     sys.exit(0)
         
-# BUCLE PRINCIPAL
+
+# MAIN 
 
 if __name__ == '__main__':
 
@@ -129,43 +122,41 @@ if __name__ == '__main__':
     last_sensors=time.clock()
     battery_capacity=get_battery_capacity(battery)
 
+
+# MAIN LOOP
     while True:
 
-    #Refresh wifi and battery indicators
-      if time.clock()-last_sensors > 5:
+# Refresh wifi and battery indicators every ten seconds (TODO)
+      if time.clock()-last_sensors > 10:
 
          x=get_battery_level()
          x=x*100/battery_capacity 
 
          if x > 0:
-           x=int(x/10)
-           indicator="||||||||||"[0:x]+".........."[0:10-x]   
+           battery_level=int(x/10)
          else:
-           indicator="OFF"
-    #     textscreen.addstr(0,9,indicator)
+           battery_level=-1
 
          x=get_wifi_level()
          if x > 0:
-           x=int(x/10)
-           indicator="||||||||||"[0:x]+".........."[0:10-x]   
+           wifi_level=int(x/10)
          else:
-           indicator="OFF"
-    #     textscreen.addstr(0,38,indicator)
+           wifi_level=-1
 
          last_sensors=time.clock()
 
-    #Blink randomly
+# Blink randomly
       if time.clock()-last_blink > 2:
         if random.randint(0,100000) == 1:
           face.blink_both()
           last_blink=time.clock()
 
+ 
+# Actions received from web interface
       while not q.empty():
         items=urlparse(q.get())
         action=items.path[1:]
         params=items.query
-      
-# Actions received from web interface
 
         if params == "quit":
             pygame.quit()	
@@ -197,8 +188,7 @@ if __name__ == '__main__':
            face.draw()
 
 
-
-# TO-DO:
+# TODO:
 #            face.look_left()
 #            face.look_right()
 #            face.blink_left()
@@ -206,5 +196,4 @@ if __name__ == '__main__':
 #            face.blink_both()
 #            face.mouth.draw(screen,"base")
 #            face.surprise()
-
          
