@@ -10,6 +10,7 @@ class Photo:
     self.photo[2], self.p_rect = load_image("photo3.jpg",1)
 
   def draw(self,scr,n):
-    scr.blit(self.photo[n],(0,0))
+    index=int(n)
+    scr.blit(self.photo[index],(0,0))
     pygame.display.flip()
         
