@@ -14,6 +14,7 @@ import time
 
 from eye import Eye
 from mouth import Mouth
+from photo import Photo
 
 
 class Face:
@@ -30,6 +31,7 @@ class Face:
     self.left_eye=Eye(center_x-250,250)
     self.right_eye=Eye(center_x+250,250)
     self.mouth=Mouth(center_x,500)
+    self.photo=Photo()
 
     self.draw()
 
@@ -47,6 +49,7 @@ class Face:
   def sad(self):
     self.left_eye.draw(self.screen,"brownleft")
     self.right_eye.draw(self.screen,"brownright")
+    self.mouth.draw(self.screen,"sad")
   def angry(self):
     self.left_eye.draw(self.screen,"brownright")
     self.right_eye.draw(self.screen,"brownleft")
@@ -72,3 +75,4 @@ class Face:
     self.close_both()
     time.sleep(0.10)
     self.open_both()
+

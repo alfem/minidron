@@ -184,26 +184,27 @@ if __name__ == '__main__':
         elif (action == "say"):
             sayandmove(params)
 # Face Expressions            
-        if (action == K_z):
-            face.look_left()
-        if (action == K_c):
-            face.look_right()
-        if (action == K_q):
-            face.blink_left()
-        if (action == K_e):
-            face.blink_right()
-        if (action == K_w):
-            face.blink_both()
-
-        if (action == K_f):
-           face.mouth.draw(screen,"base")
-        if (action == K_s):
-           face.surprise()
-        if (action == "sad"):
+        elif (action == "sad"):
            face.sad()
-        if (action == "angry"):
+        elif (action == "angry"):
            face.angry()
-        if (action == "smile"):
+        elif (action == "smile"):
            face.mouth.draw(screen,"smile")
+
+        elif (action == "photo"):
+           face.photo.draw(screen, params)
+           time.sleep(2)
+           face.draw()
+
+
+
+# TO-DO:
+#            face.look_left()
+#            face.look_right()
+#            face.blink_left()
+#            face.blink_right()
+#            face.blink_both()
+#            face.mouth.draw(screen,"base")
+#            face.surprise()
 
          
