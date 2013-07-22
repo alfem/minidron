@@ -19,6 +19,7 @@ from Queue import Queue
 import BaseHTTPServer
 import SocketServer
 from urlparse import urlparse
+import urllib
 
 from face.face import *
 from voice.voice import *
@@ -154,7 +155,7 @@ if __name__ == '__main__':
  
 # Actions received from web interface
       while not q.empty():
-        items=urlparse(q.get())
+        items=urlparse(urllib.unquote(q.get()))
         action=items.path[1:]
         params=items.query
 
