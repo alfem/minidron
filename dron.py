@@ -41,6 +41,7 @@ resolution=1024,600 # Typical netbook resolution
 pygame.display.init()
 pygame.mouse.set_visible(0)
 screen=pygame.display.set_mode(resolution)
+voice=Synthesizer()
 
 face=Face(resolution)
 
@@ -92,7 +93,7 @@ HTTP Request Handler
 
 
 def sayandmove(text2say):
-        say(text2say)
+        voice.say(text2say)
         for n in range(0,len(text2say)):
           if text2say[n] in 'aeiou':
             face.mouth.draw(screen,text2say[n])
@@ -161,6 +162,7 @@ if __name__ == '__main__':
 
         if params == "quit":
             pygame.quit()	
+            voice.close()
             sys.exit(0)
 # Movement    
         elif action == "stop":

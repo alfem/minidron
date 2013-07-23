@@ -1,16 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-from subprocess import *
+import speechd
 
-# Start a Festival TTS in pipe mode and let it running
+class Synthesizer:
+    '''
+    Speech Synthesizer for notifications (when no screen available) and user interface
+    '''
+    def __init__(self):
 
-festival = Popen(["festival","--pipe"], shell=True, stdin=PIPE).stdin
+      self.client=speechd.SSIPClient('minidron')
 
-def say(text):
+      print self.client.list_output_modules()
+      print self.client.list_synthesis_voices()
 
- text=unicode(text,'utf-8')
-# text=text.encode("latin-1")
- festival_cmd='(SayText "%s")\n' % text
- print festival_cmd
- festival.write(festival_cmd)
+      self.client.set_output_module("espeak")
+      self.client.set_language("es")
+      self.client.set_synthesis_voice("spanish")
+      self.client.set_pitch(5)
+      self.client.set_rate(5)
+      self.client.set_punctuation(speechd.PunctuationMode.SOME)
+
+
+    def say(self,text):
+      self.client.speak(text)
+
+    def close(self):
+      self.client.close()
+   
