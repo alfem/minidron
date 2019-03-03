@@ -9,10 +9,11 @@ class Synthesizer:
     switched from espeak to festival
     '''
     def __init__(self):
+      festival.setStretchFactor(1) # voice speed, 0 (fast) to 5 (slow), 
       return
 
     def say(self,text):
-      festival.say_text(text)
+      festival.sayText(text)
 
     def close(self):
       return
